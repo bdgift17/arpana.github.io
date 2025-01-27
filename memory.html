@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Card Game</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to bottom right, #FAD0C4, #FDCB82);
+            text-align: center;
+            color: #5D3F6B;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin: 20px 0;
+            color: #FF8C94;
+            text-shadow: 2px 2px 8px rgba(255, 0, 0, 0.6);
+        }
+
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            width: 80%;
+            margin: 20px auto;
+        }
+
+        .card {
+            position: relative;
+            width: 100%;
+            padding-top: 100%;
+            cursor: pointer;
+            transform: scale(1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.7);
+        }
+
+        .card .front,
+        .card .back {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            backface-visibility: hidden;
+            background: #FF8C94;
+            border: 2px solid #FDEB8D;
+            border-radius: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.5s ease;
+        }
+
+        .card .front {
+            background-size: cover;
+            transform: rotateY(180deg);
+        }
+
+        .card .back {
+            background: #FFD5D7;
+            color: #5D3F6B;
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+
+        .card.flipped .front {
+            transform: rotateY(0);
+        }
+
+        .card.flipped .back {
+            transform: rotateY(-180deg);
+        }
+
+        #timer {
+            font-size: 1.8rem;
+            margin: 10px 0;
+            color: #FF4081;
+            font-weight: bold;
+        }
+
+        #play-again,
+        #proceed {
+            display: none;
+            margin: 20px auto;
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            color: white;
+            background-color: #FF8C94;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+        }
+
+        #play-again:hover,
+        #proceed:hover {
+            background-color: #E0546A;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.8);
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Memory Card Game</h1>
+    <div id="timer">Time Remaining: 5:00</div>
+    <div id="game-board"></div>
+    <button id="play-again">Play Again</button>
+    <button id="proceed" onclick="window.location.href='surprise.html'">Proceed</button>
+
+    <!-- Background Music -->
+    <audio id="bg-music" loop>
+        <source src="background-music.mp3" type="audio/mp3">
+        Your browser does not support the audio element.
+    </audio>
+
+    <script>
+        const gameBoard = document.getElementById('game-board');
+        const playAgainButton = document.getElementById('play-again');
+        const proceedButton = document.getElementById('proceed');
+        const timerDisplay = document.getElementById('timer');
+        const bgMusic = document.getElementById('bg-music');
+
+        let images = Array.from({ length: 25 }, (_, i) => `images/memory${i + 1}.jpg`);
+        images = [...images, ...images];
+
+        let flippedCards = [];
+        let matchedCards = 0;
+        let timer;
+        let timeLeft = 300; // 5 minutes in seconds
+
+        function startGame() {
+            matchedCards = 0;
+            timeLeft = 300;
+            timerDisplay.textContent = `Time Remaining: 5:00`;
+            playAgainButton.style.display = 'none';
+            proceedButton.style.display = 'none';
+
+            images.sort(() => Math.random() - 0.5);
+
+            gameBoard.innerHTML = '';
+            images.forEach((image) => {
+                const card = document.createElement('div');
+                card.classList.add('card');
+                card.dataset.image = image;
+
+                const front = document.createElement('div');
+                front.classList.add('front');
+                front.style.backgroundImage = `url(${image})`;
+
+                const back = document.createElement('div');
+                back.classList.add('back');
+                back.textContent = '?';
+
+                card.appendChild(front);
+                card.appendChild(back);
+                gameBoard.appendChild(card);
+
+                card.addEventListener('click', () => flipCard(card));
+            });
+
+            startTimer();
+
+            document.body.addEventListener('click', () => {
+                bgMusic.play().catch((err) => console.error('Audio playback failed:', err));
+            }, { once: true });
+        }
+
+        function flipCard(card) {
+            if (card.classList.contains('flipped') || flippedCards.length === 2) return;
+
+            card.classList.add('flipped');
+            flippedCards.push(card);
+
+            if (flippedCards.length === 2) {
+                checkMatch();
+            }
+        }
+
+        function checkMatch() {
+            const [card1, card2] = flippedCards;
+
+            if (card1.dataset.image === card2.dataset.image) {
+                matchedCards += 2;
+                flippedCards = [];
+
+                if (matchedCards === images.length) {
+                    clearInterval(timer);
+                    alert('Congratulations! You matched all cards!');
+                    bgMusic.pause();
+                    proceedButton.style.display = 'block';
+                }
+            } else {
+                setTimeout(() => {
+                    card1.classList.remove('flipped');
+                    card2.classList.remove('flipped');
+                    flippedCards = [];
+                }, 1000);
+            }
+        }
+
+        function startTimer() {
+            clearInterval(timer);
+            timer = setInterval(() => {
+                timeLeft--;
+                const minutes = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+                const seconds = (timeLeft % 60).toString().padStart(2, '0');
+                timerDisplay.textContent = `Time Remaining: ${minutes}:${seconds}`;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    alert('Time\'s up! Restarting the game...');
+                    bgMusic.pause();
+                    startGame(); // Automatically restart the game with shuffled images
+                }
+            }, 1000);
+        }
+
+
+        playAgainButton.addEventListener('click', startGame);
+
+        startGame();
+    </script>
+</body>
+
+</html>
