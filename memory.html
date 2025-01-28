@@ -112,7 +112,7 @@
 
 <body>
     <h1>Memory Card Game</h1>
-    <div id="timer">Time Remaining: 5:00</div>
+    <div id="timer">Time Remaining: 4:00</div>
     <div id="game-board"></div>
     <button id="play-again">Play Again</button>
     <button id="proceed" onclick="window.location.href='surprise.html'">Proceed</button>
@@ -130,18 +130,18 @@
         const timerDisplay = document.getElementById('timer');
         const bgMusic = document.getElementById('bg-music');
 
-        let images = Array.from({ length: 35 }, (_, i) => `images/memory${i + 1}.jpg`);
+        let images = Array.from({ length: 25 }, (_, i) => `images/memory${i + 1}.jpg`);
         images = [...images, ...images];
 
         let flippedCards = [];
         let matchedCards = 0;
         let timer;
-        let timeLeft = 300; // 5 minutes in seconds
+        let timeLeft = 240; // 5 minutes in seconds
 
         function startGame() {
             matchedCards = 0;
-            timeLeft = 300;
-            timerDisplay.textContent = `Time Remaining: 5:00`;
+            timeLeft = 240;
+            timerDisplay.textContent = `Time Remaining: 4:00`;
             playAgainButton.style.display = 'none';
             proceedButton.style.display = 'none';
 
